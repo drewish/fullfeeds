@@ -1,0 +1,12 @@
+{
+    "name": "fullfeeds"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+      "async": ">= 0.1.15"
+    , "feedparser": ">= 0.4.5"
+    , "jsdom": ">= 0.2.10"
+    , "request": ">= 2.9.100"
+    , "rss": ">= 0.0.3"
+  }
+}
