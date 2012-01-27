@@ -73,12 +73,13 @@ var processFeed = function(feedName, finalCallback) {
                 finished(err);
               }
               if (!response || response.statusCode != 200) {
-                finished(new Error('Request to '+articleUrl+' ended with status code: '+(typeof response !== 'undefined' ? response.statusCode : 'unknown')));
+                finished(new Error('Request to ' + articleUrl + ' ended with status code: ' + (typeof response !== 'undefined' ? response.statusCode : 'unknown')));
               }
               else {
+                console.log('fetched');
                 var window = jsdom.jsdom().createWindow();
                 body = body.replace(/<(\/?)script/g, '<$1nobreakage');
-                jsdom.jQueryify(window, __dirname+'/public/javascripts/jquery-1.6.1.min.js', function(win, $) {
+                jsdom.jQueryify(window, __dirname + '/public/javascripts/jquery-1.6.1.min.js', function(win, $) {
                   $('head').append($(body).find('head').html());
                   $('body').append($(body).find('body').html());
 
@@ -103,7 +104,7 @@ var processFeed = function(feedName, finalCallback) {
       );
     }],
     save_feed: ['build_feed', function(callback, results) {
-      var path = "/tmp/" + feedName + ".xml";
+      var path = __dirname + '/public/' + feedName + '.xml';
       var fs = require('fs');
       fs.writeFile(path, results.build_feed.xml(), function(err) {
         if (err) {
@@ -121,4 +122,4 @@ var processFeed = function(feedName, finalCallback) {
 
 
 processFeed('plumline');
-//processFeed('ezraklein');
+processFeed('ezraklein');
