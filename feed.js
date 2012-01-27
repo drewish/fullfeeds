@@ -1,7 +1,4 @@
 var feedInfo = function(feedName) {
-  var wapoContent = function($) {
-    return $('#entrytext').html();
-  };
   var wapoLink = function(article) {
     // Skip ads.
     if (article.link.indexOf("ads.pheedo.com") === -1) {
@@ -14,37 +11,55 @@ var feedInfo = function(feedName) {
     'plumline': {
       url: 'http://feeds.washingtonpost.com/rss/rss_plum-line',
       urlExtractor: wapoLink,
-      contentExtractor: wapoContent
+      contentExtractor: function($) { return $('#entrytext').html(); }
     },
     'ezraklein': {
       url: 'http://feeds.washingtonpost.com/rss/rss_ezra-klein',
       urlExtractor: wapoLink,
-      contentExtractor: wapoContent
+      contentExtractor: function($) { return $('#article_body').html(); }
     },
   };
   return feeds[feedName];
 }
 
+var itemFetcher = function (uri, callback) {
+  var request = require('request');
+  request(
+    { 'uri': uri, 'headers': {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'} },
+    function (err, response, body) {
+      if (err) {
+        callback(err);
+      }
+      else if (!response || response.statusCode != 200) {
+        callback(new Error('Request to ' + articleUrl + ' ended with status code: ' + (typeof response !== 'undefined' ? response.statusCode : 'unknown')));
+      }
+      else {
+        callback(null, response, body);
+      }
+    }
+  );
+}
+
 var processFeed = function(feedName, finalCallback) {
   var FeedParser = require('feedparser')
     , RSS = require('rss')
-    , async = require('async');
+    , async = require('async')
+    , request = require('request')
+    , jsdom  = require('jsdom');
 
+  var feedUrl = feedInfo(feedName).url;
 
   async.auto({
     fetch_source: function(callback) {
-      var url = feedInfo(feedName).url;
       // Fetch a feed, convert it to JSON and pass it to the callback.
-      console.log("Fetching %s", url);
-      (new FeedParser()).parseUrl(url, function(err, meta, articles) {
+      console.log("Fetching %s", feedUrl);
+      (new FeedParser()).parseUrl(feedUrl, function(err, meta, articles) {
         callback(err, {meta: meta, articles: articles});
       });
     },
     // Take the feed fetch its articles and assemble their contents into a new
     // feed.
     build_feed: ['fetch_source', function(callback, results) {
-      var request = require('request')
-        , jsdom  = require('jsdom');
 
       // Build an array of the articles that have truthy URLs.
       var urlExtractor = feedInfo(feedName).urlExtractor
@@ -58,7 +73,7 @@ var processFeed = function(feedName, finalCallback) {
         title: meta.title,
         description: meta.description,
         site_url: meta.link,
-        // feed_url: 'http://example.com/rss.xml',
+        feed_url: feedUrl,
         // image_url: 'http://example.com/icon.png',
       });
 
@@ -66,14 +81,11 @@ var processFeed = function(feedName, finalCallback) {
         articles,
         function (article, finished) {
           var articleUrl = urlExtractor(article);
-          request(
-            { 'uri': articleUrl, 'headers': {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'} },
+          itemFetcher(
+            articleUrl,
             function (err, response, body) {
               if (err) {
                 finished(err);
-              }
-              if (!response || response.statusCode != 200) {
-                finished(new Error('Request to ' + articleUrl + ' ended with status code: ' + (typeof response !== 'undefined' ? response.statusCode : 'unknown')));
               }
               else {
                 console.log('fetched');
