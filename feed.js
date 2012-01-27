@@ -27,7 +27,6 @@ var feedInfo = function(feedName) {
 
 var processFeed = function(feedName, finalCallback) {
   var FeedParser = require('feedparser')
-    , scraper = require('scraper')
     , RSS = require('rss')
     , async = require('async');
 
