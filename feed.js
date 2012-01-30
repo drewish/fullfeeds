@@ -21,6 +21,10 @@ var feedInfo = function(feedName) {
       urlExtractor: wapoLink,
       selector: '#article_body'
     },
+    'taibbi': {
+      url: 'http://www.rollingstone.com/siteServices/rss/taibbiBlog',
+      selector: '.blog-post-content'
+    }
   };
   return feeds[feedName];
 }
@@ -38,7 +42,7 @@ var itemFetcher = function (item, callback) {
       callback(err, item);
     }
     else {
-      console.log("%s Fetching article %s", item.feedName, item.url);
+      console.log("%s: Fetching %s", item.feedName, item.url);
       // Have JSDOM fetch the page and parse it...
       jsdom.env(
         item.url,
@@ -82,7 +86,7 @@ var processFeed = function(feedName, finalCallback) {
     },
     extract_urls: ['fetch_feed', function(callback, results) {
       // Build an array of the articles that have truthy URLs.
-      var urlExtractor = feedInfo(feedName).urlExtractor,
+      var urlExtractor = feedInfo(feedName).urlExtractor || function(a) { return a.link; },
           items = [];
 
       results.fetch_feed.articles.forEach(function (article) {
@@ -138,5 +142,6 @@ var processFeed = function(feedName, finalCallback) {
 client = redis.createClient();
 async.parallel([
   function(callback){ processFeed('plumline', callback); },
-  function(callback){ processFeed('ezraklein', callback); }
+  function(callback){ processFeed('ezraklein', callback); },
+  function(callback){ processFeed('taibbi', callback); }
 ], function(){ client.end(); });
