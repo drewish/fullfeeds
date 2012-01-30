@@ -28,15 +28,14 @@ var feedInfo = function(feedName) {
 var itemFetcher = function (item, callback) {
   var request = require('request'),
       jsdom  = require('jsdom');
-  return callback(null, item);
 
   var key = "fullfeed:article:" + item.url;
 
   // Try to load a cached copy.
   client.get(key, function (err, res) {
     if (res !== null) {
-      console.log('cache hit');
       item.body = res;
+      callback(err, item);
     }
     else {
       console.log("%s Fetching article %s", item.feedName, item.url);
@@ -97,7 +96,6 @@ var processFeed = function(feedName, finalCallback) {
     }],
     fetch_items: ['extract_urls', function(callback, results) {
       async.map(results.extract_urls, itemFetcher, callback);
-//      callback(null);
     }],
     build_feed: ['fetch_items', function(callback, results) {
       console.log("%s: Building feed", feedName);
