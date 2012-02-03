@@ -35,7 +35,9 @@ fullfeeds(config, function(err, results) {
     var fs = require('fs');
     console.log("%s: Saving to %s", result.config.name, path);
     fs.writeFile(path, result.build_feed.xml(), function(err) {
-      callback(err, path);
+      if (err) {
+        console.error(err);
+      }
     });
   })
 });
