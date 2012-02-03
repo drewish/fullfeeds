@@ -1,4 +1,5 @@
-var fullfeeds = require('../lib/fullfeeds');
+var fullfeeds = require('../lib/fullfeeds'),
+    fs = require('fs');
 
 var wapoLink = function(article) {
   // Skip ads.
@@ -32,7 +33,6 @@ var config = [
 fullfeeds(config, function(err, results) {
   results.forEach(function(result) {
     var path = __dirname + '/output/' + result.config.name + '.xml';
-    var fs = require('fs');
     console.log("%s: Saving to %s", result.config.name, path);
     fs.writeFile(path, result.build_feed.xml(), function(err) {
       if (err) {
