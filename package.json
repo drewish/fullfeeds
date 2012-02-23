@@ -6,7 +6,7 @@
   "dependencies": {
     "async": ">= 0.1.15",
     "feedparser": ">= 0.4.5",
-    "jsdom": ">= 0.2.10",
+    "jsdom": ">= 0.2.11",
     "redis": ">= 0.7.1",
     "rss": ">= 0.0.3"
   },
