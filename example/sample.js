@@ -1,22 +1,15 @@
 var fullfeeds = require('../lib/fullfeeds'),
     fs = require('fs');
 
-var wapoLink = function(article) {
-  // Skip ads.
-  return (article.link.indexOf("ads.pheedo.com") === -1) ? article.guid : false;
-};
 var config = [
   {
     name: 'plumline',
     url: 'http://feeds.washingtonpost.com/rss/rss_plum-line',
-    urlExtractor: wapoLink,
+    urlExtractor: function(article) {
+      // Skip ads.
+      return (article.link.indexOf("ads.pheedo.com") === -1) ? article.guid : false;
+    },
     selector: '#entrytext',
-  },
-  {
-    name: 'ezraklein',
-    url: 'http://feeds.washingtonpost.com/rss/rss_ezra-klein',
-    urlExtractor: wapoLink,
-    selector: '#article_body'
   },
   {
     name: 'taibbi',
