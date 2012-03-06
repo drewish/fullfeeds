@@ -2,7 +2,7 @@
   "name": "fullfeeds",
   "version": "0.0.1",
   "description": "Enhances RSS feeds by following their links, extracting additional additional content from those pages and incorporating it into a new feed.",
-  "author": "andrew morton",
+  "author": "andrew morton <drewish@katherinehouse.com> (http://drewish.com/)",
   "dependencies": {
     "async": ">= 0.1.15",
     "feedparser": ">= 0.4.5",
@@ -15,14 +15,17 @@
     "node"
   ],
   "directories": {
-      "lib": "./lib/jsdom"
+    "lib": "./lib/jsdom"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/drewish/fullfeeds"
+    "url": "git://github.com/drewish/fullfeeds.git"
   },
   "keywords": [
     "rss",
     "feed"
-  ]
+  ],
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "homepage": "https://github.com/drewish/fullfeeds"
 }
