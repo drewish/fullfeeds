@@ -8,7 +8,10 @@
     "feedparser": ">= 0.4.5",
     "jsdom": ">= 0.2.11",
     "redis": ">= 0.7.1",
-    "rss": ">= 0.0.3"
+    "rss": ">= 0.0.3",
+    "express": "2.5.8",
+    "jade": ">= 0.0.1",
+    "connect-redis": ">= 1.2.0"
   },
   "main": "./lib/fullfeeds",
   "engines": [

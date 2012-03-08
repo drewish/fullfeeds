@@ -1,0 +1,6 @@
+h1= title
+form(method='post', action='/new')
+  lable(for='url') New feed
+  input(type='text', name='url')
+  input(type='submit', value='Add')
+#feeds!= partial('feed', {collection: feeds})
