@@ -1,14 +1,14 @@
 h1= title
-form(method='post', action='/add/')
+form(method='post', action='/feeds/new')
   div
     lable(for='name') Name
-    input(type='text', name='name', id='name', value='')
+    input(type='text', name='name', id='name', value=feed.name)
   div
     lable(for='url') URL
-    input(type='text', name='url', id='url', value=url)
+    input(type='text', name='url', id='url', value=feed.url)
   div
     lable(for='selector') Selector
-    input(type='text', name='selector', id='selector', value=)
+    input(type='text', name='selector', id='selector', value=feed.selector)
   div
     input(type='submit', value='Save')
-    a(href='/view/' + feed.name) Cancel
+    a(href='/feeds') Cancel

@@ -6,10 +6,12 @@
   "dependencies": {
     "async": ">= 0.1.15",
     "feedparser": ">= 0.4.5",
-    "jsdom": ">= 0.2.11",
+    // Need to sort out an issue with newer versions of JSDOM
+    "jsdom": "= 0.2.11",
     "redis": ">= 0.7.1",
     "rss": ">= 0.0.3",
-    "request": "2.9.x",
+    "request": ">= 2.9.x",
+    // Not sure I need to hard code this yet.
     "express": "2.5.8",
     "jade": ">= 0.0.1",
     "connect-redis": ">= 1.2.0"

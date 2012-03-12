@@ -1,6 +1,6 @@
 h1= title
-form(method='post', action='/delete/' + feed.name)
+form(method='post', action='/feeds/' + feed.name + '/delete')
   div Are you sure you want to delete #{feed.name}?
   div
     input(type='submit', value='Delete')
-    a(href='/view/' + feed.name) Keep It
+    a(href='/feeds/' + feed.name) Keep It

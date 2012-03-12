@@ -1,5 +1,5 @@
 h1= title
-form(method='post', action='/edit/' + feed.name)
+form(method='post', action='/feeds/' + feed.name + '/edit')
   div
     lable(for='url') URL
     input(type='text', name='url', id='url', value=feed.url)
@@ -8,4 +8,4 @@ form(method='post', action='/edit/' + feed.name)
     input(type='text', name='selector', id='selector', value=feed.selector)
   div
     input(type='submit', value='Save')
-    a(href='/view/' + feed.name) Cancel
+    a(href='/feeds/' + feed.name) Forget It
