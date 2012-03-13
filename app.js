@@ -11,29 +11,6 @@ var express = require('express')
 var app = module.exports = express.createServer()
    , redisClient = redis.createClient();
 
-// var feeds = [
-//   {
-//     name: 'plumline',
-//     url: 'http://feeds.washingtonpost.com/rss/rss_plum-line',
-//     urlExtractor: function(article) {
-//       // Skip ads.
-//       return (article.link.indexOf("ads.pheedo.com") === -1) ? article.guid : false;
-//     },
-//     selector: '#entrytext',
-//   },
-//   {
-//     name: 'taibbi',
-//     url: 'http://www.rollingstone.com/siteServices/rss/taibbiBlog',
-//     selector: '.blog-post-content'
-//   },
-//   {
-//     name: 'paulgraham',
-//     url: 'http://www.aaronsw.com/2002/feeds/pgessays.rss',
-//     selector: 'table table tr td'
-//   }
-// ];
-
-
 // Configuration
 
 app.configure(function(){
@@ -96,8 +73,6 @@ app.get('/feeds', function(req, res){
 });
 
 app.get('/feeds/new', function(req, res){
-console.log("new get");
-console.dir(req.query.url);
   res.render('feed/add', {
     title: 'Add Feed', locals: {
       feed: {
@@ -109,10 +84,7 @@ console.dir(req.query.url);
   });
 });
 app.post('/feeds/new', function(req, res){
-console.log("new post");
-console.dir(req.body);
   saveFeed(req.body.name, req.body.url, req.body.selector);
-//console.dir(req.body.url);
   res.redirect('/feeds');
 });
 
@@ -208,17 +180,14 @@ function cachingFetcher(url, options, callback) {
   var request = require('request')
     , options = options || {}
     , key = (options.prefix || "raw_get:") + url
-    , ttl = (options.ttl || 60 * 60 * 24 * 7);
+    , ttl = (options.ttl || 60 * 60 * 24 * 7)
+    , skipCache = (options.skipCache || false);
 
   if (!url) {
     return callback(null, null);
   }
 
-  // Try to load a cached copy...
-  redisClient.get(key, function (err, result) {
-    if (result !== null) {
-      return callback(err, result);
-    }
+  var fetcher = function() {
     console.log("Fetching %s", url);
     request.get(url, function (err, response, body) {
       // If it was successful cache a copy with redis.
@@ -230,7 +199,20 @@ function cachingFetcher(url, options, callback) {
         return callback(err, null);
       }
     });
-  });
+  }
+
+  if (skipCache) {
+    fetcher();
+  }
+  else {
+    // Try to load a cached copy...
+    redisClient.get(key, function (err, result) {
+      if (result !== null) {
+        return callback(err, result);
+      }
+      fetcher()
+    });
+  }
 };
 
 function fetchFeed(feed, callback) {
@@ -282,7 +264,6 @@ function extractArticle(feed, article, callback) {
       return callback();
     }
     console.log("%s: Fetching %s", feed.name, article.url);
-    console.log(article.html.substr(0, 100));
     // Have JSDOM parse it...
     jsdom.env(
       article.html,

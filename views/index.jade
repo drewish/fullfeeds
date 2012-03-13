@@ -1,6 +1,10 @@
 h1= title
-form(method='get', action='/feeds/new')
-  lable(for='url') New feed
-  input(type='text', name='url')
-  input(type='submit', value='Add')
-#feeds!= partial('feed', {collection: feeds})
+
+form.well.form-inline(method='get', action='/feeds/new')
+  fieldset
+    input(type="text", placeholder="New feed URL")
+    div.input-append
+      input.btn.btn-success(type='submit', value='Add')
+
+each feed in feeds
+  != partial('feed/summary', {locals: {feed: feed}})

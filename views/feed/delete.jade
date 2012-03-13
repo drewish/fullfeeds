@@ -1,6 +1,8 @@
-h1= title
+h1= feed.name
 form(method='post', action='/feeds/' + feed.name + '/delete')
-  div Are you sure you want to delete #{feed.name}?
-  div
-    input(type='submit', value='Delete')
-    a(href='/feeds/' + feed.name) Keep It
+  fieldset
+    legend Are you sure you want to delete #{feed.name}?
+    div.form-actions
+      input.btn.btn-danger(type='submit', value='Delete')
+      &nbsp;
+      a.btn(href='/feeds/' + feed.name) Keep It

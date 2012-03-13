@@ -1,6 +1,5 @@
 h1= title
 != partial('manage_menu', feed)
-p= feed.url
 div Has #{feed.articles.length} items
 dl
 each article, i in feed.articles

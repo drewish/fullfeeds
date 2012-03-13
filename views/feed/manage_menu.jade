@@ -1,5 +1,8 @@
-ul
-  li
-    a(href='/feeds/' + feed.name + '/edit') Edit
-  li
-    a(href='/feeds/' + feed.name + '/delete') Delete
+div.btn-group
+  a.btn.dropdown-toggle(data-toggle="dropdown", href="#") Manage
+    span.caret
+  ul.dropdown-menu
+    li
+      a(href='/feeds/' + feed.name + '/edit') Edit
+    li
+      a(href='/feeds/' + feed.name + '/delete') Delete

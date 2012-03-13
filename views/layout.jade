@@ -1,6 +1,26 @@
-!!!
-html
+!!! 5
+html(lang="en")
   head
+    meta(charset="utf-8")
     title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body!= body
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="description", content="")
+    meta(name="author", content="")
+
+    link(href="/css/bootstrap.css", rel="stylesheet")
+    style.
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    link(href="/css/bootstrap-responsive.css", rel="stylesheet")
+
+    //if lt IE 9
+      script(src="http://html5shim.googlecode.com/svn/trunk/html5.js")
+
+  body
+    !=partial('navbar')
+    div.container!= body
+
+    script(src="/js/jquery-1.7.1.js")
+    script(src="/js/bootstrap.js")
+

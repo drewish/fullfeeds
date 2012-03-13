@@ -1,11 +1,16 @@
-h1= title
-form(method='post', action='/feeds/' + feed.name + '/edit')
-  div
-    lable(for='url') URL
-    input(type='text', name='url', id='url', value=feed.url)
-  div
-    lable(for='selector') Selector
-    input(type='text', name='selector', id='selector', value=feed.selector)
-  div
-    input(type='submit', value='Save')
-    a(href='/feeds/' + feed.name) Forget It
+h1= feed.name
+form.form-horizontal(method='post', action='/feeds/' + feed.name + '/edit')
+  fieldset
+    legend Edit Feed
+    div.control-group
+      lable.control-label(for='url') URL
+      div.controls
+        input(type='text', name='url', id='url', value=feed.url)
+    div.control-group
+      lable.control-label(for='selector') Selector
+      div.controls
+        input(type='text', name='selector', id='selector', value=feed.selector)
+    div.form-actions
+      input.btn.btn-primary(type='submit', value='Save')
+      &nbsp;
+      a.btn(href='/feeds/' + feed.name) Forget It
