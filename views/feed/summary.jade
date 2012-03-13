@@ -1,4 +1,11 @@
-h2
-  a(href='/feeds/' + feed.name)= feed.name
-div!= partial('manage_menu', feed)
-div= feed.url
+div.row
+  div.span12
+    h2
+      a(href='/feeds/' + feed.name)= feed.name
+    div.row
+      div.span8
+        a(href='feed.url')= feed.url
+        &nbsp;
+        span.badge=1
+
+      div.span4!= partial('manage_menu', feed)

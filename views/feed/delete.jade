@@ -1,7 +1,6 @@
-h1= feed.name
 form(method='post', action='/feeds/' + feed.name + '/delete')
   fieldset
-    legend Are you sure you want to delete #{feed.name}?
+    legend Are you sure you want to delete <em>#{feed.name}</em>?
     div.form-actions
       input.btn.btn-danger(type='submit', value='Delete')
       &nbsp;

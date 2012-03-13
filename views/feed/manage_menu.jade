@@ -1,8 +1,18 @@
 div.btn-group
-  a.btn.dropdown-toggle(data-toggle="dropdown", href="#") Manage
+  a.btn.dropdown-toggle(data-toggle="dropdown", href="#")
+    i.icon-cog
+    &nbsp;Manage
     span.caret
   ul.dropdown-menu
     li
-      a(href='/feeds/' + feed.name + '/edit') Edit
+      a(href='/feeds/' + feed.name + '/refresh')
+        i.icon-refresh
+        &nbsp;Refresh
     li
-      a(href='/feeds/' + feed.name + '/delete') Delete
+      a(href='/feeds/' + feed.name + '/edit')
+        i.icon-pencil
+        &nbsp;Edit
+    li
+      a(href='/feeds/' + feed.name + '/delete')
+        i.icon-remove
+        &nbsp;Delete

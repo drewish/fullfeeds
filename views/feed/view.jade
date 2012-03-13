@@ -1,5 +1,4 @@
-h1= title
-!= partial('manage_menu', feed)
+div.offset8!= partial('manage_menu', feed)
 div Has #{feed.articles.length} items
 dl
 each article, i in feed.articles
