@@ -88,39 +88,16 @@ console.log(feed);
 app.get('/feeds/:feed', function(req, res){
   var feed = req.feed;
 
-  // For shits lets just render the feed.
-  async.series(
-    [
-      function(callback) {
-        fetchFeed(feed, callback);
-      },
-      function(callback) {
-        fetchFeedsArticles(feed, callback);
-      },
-      function(callback) {
-        extractFeedsArticles(feed, callback);
-      },
-      function(callback) {
-        // We don't really need to wait for this before we serve the page.
-        buildFullFeed(feed, function(err, feedOut) {
-          redisClient.setex('full_feed:' + feed.name, 60 * 60, feedOut.xml());
-        });
-        callback();
-      }
-    ],
-    function(err) {
-      if (err) return;
-      saveFeed(feed);
-
-      res.render('feed/view', {
-        title: feed.meta.title,
-        locals: { feed: feed}
-      });
-    }
-  );
+  updateFeed(feed, function(err) {
+    if (err) return;
+    res.render('feed/view', {
+      title: feed.meta.title,
+      locals: { feed: feed}
+    });
+  });
 });
 
-app.get('/feeds/:feed.xml', function(req, res){
+app.get('/feeds/:feed/xml', function(req, res){
   buildFullFeed(req.feed, function(err, feedOut) {
     res.header('Content-Type', 'application/rss+xml; charset=utf-8');
     res.end(feedOut.xml());
