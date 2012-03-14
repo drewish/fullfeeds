@@ -2,14 +2,15 @@
  * Module dependencies.
  */
 
-var express = require('express')
-   , routes = require('./routes')
-   , async = require('async')
-   , redis = require('redis')
-   , redisStore = require('connect-redis')(express);
+var util = require('util')
+  , express = require('express')
+  , routes = require('./routes')
+  , async = require('async')
+  , redis = require('redis')
+  , redisStore = require('connect-redis')(express);
 
 var app = module.exports = express.createServer()
-   , redisClient = redis.createClient();
+  , redisClient = redis.createClient();
 
 // Configuration
 
@@ -41,51 +42,47 @@ app.configure('production', function(){
  * Load the feed.
  */
 app.param('feed', function(req, res, next, id){
-  redisClient.hgetall('feed_info:' + id, function (err, obj) {
+  loadFeed(id, function(err, feed) {
     if (err) {
       return next(err);
     }
-    if (obj === null || obj === {}) {
+    if (!feed) {
       return next(new Error('cannot load feed ' + id));
     }
-    req.feed = obj;
-    next()
+    req.feed = feed;
+    next();
   });
 });
 
 
 app.get('/feeds', function(req, res){
   // Fetch the feeds list…
-  redisClient.smembers('feed_list', function (err, obj) {
-    if (err) return;
-    // …then fetch the feeds…
-    var multi = redisClient.multi();
-    obj.forEach(function(key) {
-      multi.hgetall('feed_info:' + key);
-    });
-    multi.exec(function (err, obj) {
-      res.render('index', {
-        title: 'Full Feeds',
-        locals: { feeds: obj}
-      });
+  loadAllFeeds(function (err, obj) {
+    res.render('index', {
+      title: 'Full Feeds',
+      locals: { feeds: obj}
     });
   });
 });
 
 app.get('/feeds/new', function(req, res){
+  var feed = req.body.feed || req.query.feed || {};
   res.render('feed/add', {
-    title: 'Add Feed', locals: {
-      feed: {
-        'url': req.body.url || req.query.url || '',
-        'name': req.body.name,
-        'selector': req.body.selector,
-      }
-    }
+    title: 'New Feed',
+    locals: { feed: feed }
   });
 });
 app.post('/feeds/new', function(req, res){
-  saveFeed(req.body.name, req.body.url, req.body.selector);
-  res.redirect('/feeds');
+  var feed = req.body.feed
+console.log(feed);
+  fetchFeed(feed, function(err, feed) {
+    if (!err) {
+      // Queue the article fetching but don't wait for it to finish.
+      fetchFeedsArticles(feed);
+      saveFeed(feed);
+      res.redirect('/feeds');
+    }
+  });
 });
 
 app.get('/feeds/:feed', function(req, res){
@@ -112,13 +109,30 @@ app.get('/feeds/:feed', function(req, res){
       }
     ],
     function(err) {
+      if (err) return;
+      saveFeed(feed);
+
       res.render('feed/view', {
-        title: 'View Feed',
+        title: feed.meta.title,
         locals: { feed: feed}
       });
     }
   );
 });
+
+app.get('/feeds/:feed.xml', function(req, res){
+  buildFullFeed(req.feed, function(err, feedOut) {
+    res.header('Content-Type', 'application/rss+xml; charset=utf-8');
+    res.end(feedOut.xml());
+  });
+});
+
+app.get('/feeds/:feed/refresh', function(req, res){
+  updateFeed(req.feed);
+  // TODO: should be smarter on where we redirect them to.
+  res.redirect('/feeds');
+});
+
 
 app.get('/feeds/:feed/edit', function(req, res){
 console.log("editing");
@@ -128,8 +142,9 @@ console.log("editing");
   });
 });
 app.post('/feeds/:feed/edit', function(req, res){
-console.log("updating");
-  saveFeed(req.params.feed, req.body.url, req.body.selector);
+  var feed = req.body.feed
+  feed.name = req.params.feed;
+  saveFeed(feed);
   res.redirect('/feeds');
 });
 
@@ -157,23 +172,55 @@ console.log("Express server listening on port %d in %s mode", app.address().port
 //   }
 // }
 
-function saveFeed(name, url, selector) {
-console.log("saving " + name);
-  redisClient.multi()
-    .sadd('feed_list', name, redis.print)
-    .hmset('feed_info:' + name, {
-      'name': name,
-      'url': url,
-      'selector': selector
-    })
-    .exec();
+function hashUrl(url) {
+  var crypto = require('crypto')
+    , shasum = crypto.createHash('sha256');
+  shasum.update(url);
+  return shasum.digest('hex');
+}
+
+function saveFeed(feed) {
+  if (!feed.url) {
+    return false;
+  }
+  feed.name = feed.name || hashUrl(feed.url);
+
+  redisClient.hmset('feed_info', feed.name, JSON.stringify(feed), redis.print);
+}
+
+function loadFeed(name, fn) {
+  redisClient.hget('feed_info', name, function (err, obj) {
+    if (err) {
+      return fn(err);
+    }
+    try {
+      obj = JSON.parse(obj);
+    }
+    catch (SyntaxError) {
+      return fn(SyntaxError);
+    }
+    return fn(null, obj);
+  });
+}
+
+function loadAllFeeds(fn) {
+  redisClient.hgetall('feed_info', function (err, obj) {
+    if (err) {
+      return fn(err);
+    }
+    Object.keys(obj).forEach(function(key) {
+      // Ignore problems with individual feeds.
+      try {
+        obj[key] = JSON.parse(obj[key]);
+      }
+      catch (SyntaxError) { }
+    });
+    fn(null, obj);
+  });
 }
 
 function deleteFeed(name) {
-  redisClient.multi()
-    .del('feed_info:' + name)
-    .srem('feed_list', name)
-    .exec();
+  redisClient.hdel('feed_info', name);
 }
 
 function cachingFetcher(url, options, callback) {
@@ -217,16 +264,16 @@ function cachingFetcher(url, options, callback) {
 
 function fetchFeed(feed, callback) {
   var FeedParser = require('feedparser');
-  cachingFetcher(feed.url, {ttl: 60 * 60}, function (err, result) {
-    (new FeedParser()).parseString(result, function(err, meta, articles) {
-      feed.meta = meta;
-      feed.articles = articles;
-      callback(err, feed);
-    });
+  (new FeedParser()).parseFile(feed.url, function(err, meta, articles) {
+    feed.meta = meta;
+    feed.articles = articles;
+    callback(err, feed);
   });
 }
 
 function fetchFeedsArticles(feed, callback) {
+  // Might be good to have some locking here so we don't try to reload the
+  // same articles multiple times.
   var urlExtractor = feed.urlExtractor || function(a) { return a.link; }
     , articles = []
     , tasks = [];
@@ -316,3 +363,45 @@ function buildFullFeed(feed, callback) {
   });
   callback(null, feedOut);
 }
+
+// Update the feeds once an hour.
+setInterval(updateFeeds, 1000 * 60 * 60);
+
+function updateFeeds() {
+  loadAllFeed(function (err, feeds) {
+    Object.keys(feeds).forEach(function(name) {
+      updateFeed(feeds[name]);
+    });
+  });
+}
+
+function updateFeed(feed, fn) {
+  console.log("updating feed " + (feed.meta.title || feed.name));
+  fn = fn || function() {};
+  async.series(
+    [
+      function(callback) {
+        fetchFeed(feed, callback);
+      },
+      function(callback) {
+        fetchFeedsArticles(feed, callback);
+      },
+      function(callback) {
+        extractFeedsArticles(feed, callback);
+      // },
+      // function(callback) {
+      //   // We don't really need to wait for this before we serve the page.
+      //   buildFullFeed(feed, function(err, feedOut) {
+      //     redisClient.setex('full_feed:' + feed.name, 60 * 60, feedOut.xml());
+      //   });
+      //   callback();
+      }
+    ],
+    function(err) {
+      if (!err) {
+        saveFeed(feed);
+      }
+      fn(err, feed);
+    }
+  );
+};

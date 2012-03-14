@@ -1,6 +1,6 @@
 form.well.form-inline(method='get', action='/feeds/new')
   fieldset
-    input(type="text", placeholder="New feed URL")
+    input(type="text", name="feed[url]", placeholder="New feed URL")
     div.input-append
       input.btn.btn-success(type='submit', value='Add')
 

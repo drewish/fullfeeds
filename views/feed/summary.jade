@@ -1,11 +1,16 @@
 div.row
   div.span12
     h2
-      a(href='/feeds/' + feed.name)= feed.name
+      a(href='/feeds/' + feed.name)= feed.meta.title
     div.row
       div.span8
-        a(href='feed.url')= feed.url
-        &nbsp;
-        span.badge=1
+        //a(href='feed.url')= feed.url
+
+        dl
+          each article in feed.articles.slice(0, 5)
+            dt= article.title
+            dd= (article.content || '').substr(0, 100)
+          if (feed.articles.length > 5)
+            div= '+' + (feed.articles.length - 5) + ' more'
 
       div.span4!= partial('manage_menu', feed)
