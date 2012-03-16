@@ -1,18 +1,25 @@
-div.btn-group
-  a.btn.dropdown-toggle(data-toggle="dropdown", href="#")
-    i.icon-cog
-    &nbsp;Manage
-    span.caret
-  ul.dropdown-menu
-    li
-      a(href='/feeds/' + feed.name + '/refresh')
-        i.icon-refresh
-        &nbsp;Refresh
-    li
-      a(href='/feeds/' + feed.name + '/edit')
-        i.icon-pencil
-        &nbsp;Edit
-    li
-      a(href='/feeds/' + feed.name + '/delete')
-        i.icon-remove
-        &nbsp;Delete
+ul.unstyled
+  li
+    a(href='/feeds/' + feed.name + '/refresh')
+      i.icon-refresh
+      &nbsp;Refresh
+  li
+    a(href='/feeds/' + feed.name + '/edit')
+      i.icon-pencil
+      &nbsp;Edit
+  li
+    a(href='/feeds/' + feed.name + '/delete')
+      i.icon-remove
+      &nbsp;Delete
+ul.unstyled
+  li
+    a(href=feed.url)
+      i.icon-download
+      &nbsp;Original URL
+  li
+    a(href='/feeds/' + feed.name + '/xml')
+      i.icon-upload
+      &nbsp;Full Feed URL
+
+  li
+    Has #{feed.articles.length} items, updated #{moment(feed.fetchedAt).fromNow()}

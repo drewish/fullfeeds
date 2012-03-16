@@ -7,7 +7,8 @@ var util = require('util')
   , routes = require('./routes')
   , async = require('async')
   , redis = require('redis')
-  , redisStore = require('connect-redis')(express);
+  , redisStore = require('connect-redis')(express)
+  , moment = require('moment');
 
 var app = module.exports = express.createServer()
   , redisClient = redis.createClient();
@@ -36,8 +37,6 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
-// Routes
-
 /**
  * Load the feed.
  */
@@ -47,13 +46,20 @@ app.param('feed', function(req, res, next, id){
       return next(err);
     }
     if (!feed) {
-      return next(new Error('cannot load feed ' + id));
+      return next(new Error('Cannot load feed ' + id));
     }
     req.feed = feed;
     next();
   });
 });
 
+app.dynamicHelpers({ messages: require('express-messages-bootstrap') });
+
+app.dynamicHelpers({ moment: function(req, res) {
+  return moment;
+}});
+
+// Routes
 
 app.get('/feeds', function(req, res){
   // Fetch the feeds list…
@@ -73,13 +79,14 @@ app.get('/feeds/new', function(req, res){
   });
 });
 app.post('/feeds/new', function(req, res){
+  // TODO: need to try fetching feed and return errors if not.
   var feed = req.body.feed
-console.log(feed);
   fetchFeed(feed, function(err, feed) {
     if (!err) {
       // Queue the article fetching but don't wait for it to finish.
       fetchFeedsArticles(feed);
       saveFeed(feed);
+      req.flash('info', 'Created the feed');
       res.redirect('/feeds');
     }
   });
@@ -92,7 +99,7 @@ app.get('/feeds/:feed', function(req, res){
     if (err) return;
     res.render('feed/view', {
       title: feed.meta.title,
-      locals: { feed: feed}
+      locals: { feed: feed, updated: moment(feed.fetchedAt).fromNow() }
     });
   });
 });
@@ -106,6 +113,7 @@ app.get('/feeds/:feed/xml', function(req, res){
 
 app.get('/feeds/:feed/refresh', function(req, res){
   updateFeed(req.feed);
+  req.flash('info', 'Refreshing the feed');
   // TODO: should be smarter on where we redirect them to.
   res.redirect('/feeds');
 });
@@ -114,46 +122,39 @@ app.get('/feeds/:feed/refresh', function(req, res){
 app.get('/feeds/:feed/edit', function(req, res){
 console.log("editing");
   res.render('feed/edit', {
-    title: 'Edit Feed',
+    title: (req.feed.meta || {title:''}).title,
     locals: { feed: req.feed}
   });
 });
 app.post('/feeds/:feed/edit', function(req, res){
   var feed = req.body.feed
-  feed.name = req.params.feed;
+  feed.selector = req.params.feed.selector;
+console.log(feed);
   saveFeed(feed);
+  req.flash('info', 'Saved the feed');
   res.redirect('/feeds');
 });
 
 app.get('/feeds/:feed/delete', function(req, res){
-console.log(req.feed);
   res.render('feed/delete', {
-    title: 'Delete Feed',
+    title: (req.feed.meta || {title:''}).title,
     locals: { feed: req.feed}
   });
 });
 app.post('/feeds/:feed/delete', function(req, res){
   deleteFeed(req.params.feed);
+  req.flash('info', 'Deleted the feed');
   res.redirect('/feeds');
 });
 
 app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
-// function requiresLogin(req, res, next) {
-//   if (req.session.user) {
-//     next();
-//   }
-//   else {
-//     res.redirect('/sessions/new?redirect=' + req.url);
-//   }
-// }
-
 function hashUrl(url) {
   var crypto = require('crypto')
-    , shasum = crypto.createHash('sha256');
-  shasum.update(url);
-  return shasum.digest('hex');
+    , hash = crypto.createHash('md5');
+  hash.update(url);
+  return hash.digest('hex');
 }
 
 function saveFeed(feed) {
@@ -165,13 +166,21 @@ function saveFeed(feed) {
   redisClient.hmset('feed_info', feed.name, JSON.stringify(feed), redis.print);
 }
 
+function _parseFeed(json) {
+  var feed = JSON.parse(json);
+  feed.meta = feed.meta || {'title': 'Missing Title'};
+  feed.articles = feed.articles || [];
+  feed.fetchedAt = feed.fetchedAt || null;
+  return feed;
+}
+
 function loadFeed(name, fn) {
   redisClient.hget('feed_info', name, function (err, obj) {
     if (err) {
       return fn(err);
     }
     try {
-      obj = JSON.parse(obj);
+      obj = _parseFeed(obj);
     }
     catch (SyntaxError) {
       return fn(SyntaxError);
@@ -188,7 +197,7 @@ function loadAllFeeds(fn) {
     Object.keys(obj).forEach(function(key) {
       // Ignore problems with individual feeds.
       try {
-        obj[key] = JSON.parse(obj[key]);
+        obj[key] = _parseFeed(obj[key]);
       }
       catch (SyntaxError) { }
     });
@@ -241,11 +250,18 @@ function cachingFetcher(url, options, callback) {
 
 function fetchFeed(feed, callback) {
   var FeedParser = require('feedparser');
-  (new FeedParser()).parseFile(feed.url, function(err, meta, articles) {
-    feed.meta = meta;
-    feed.articles = articles;
-    callback(err, feed);
-  });
+  try {
+    (new FeedParser()).parseFile(feed.url, function(err, meta, articles) {
+      feed.meta = meta;
+      feed.articles = articles;
+      feed.fetchedAt = (new Date()).toJSON();
+      console.log(feed.fetchedAt);
+      callback(err, feed);
+    });
+  }
+  catch (err) {
+    callback(err)
+  }
 }
 
 function fetchFeedsArticles(feed, callback) {
@@ -345,7 +361,7 @@ function buildFullFeed(feed, callback) {
 setInterval(updateFeeds, 1000 * 60 * 60);
 
 function updateFeeds() {
-  loadAllFeed(function (err, feeds) {
+  loadAllFeeds(function (err, feeds) {
     Object.keys(feeds).forEach(function(name) {
       updateFeed(feeds[name]);
     });
@@ -353,7 +369,7 @@ function updateFeeds() {
 }
 
 function updateFeed(feed, fn) {
-  console.log("updating feed " + (feed.meta.title || feed.name));
+  console.log("updating feed " + feed.name);
   fn = fn || function() {};
   async.series(
     [

@@ -1,10 +1,11 @@
-form.form-horizontal(method='post', action='/feeds/' + feed.name + '/edit')
+form#form-feed-edit.form-horizontal(method='post', action='/feeds/' + feed.name + '/edit')
   fieldset
     legend Edit
     div.control-group
-      lable.control-label(for='url') URL
+      lable.control-label URL
       div.controls
-        input(type='text', name='feed[url]', id='url', value=feed.url)
+        div(style="margin-top: 5px;")
+          a(href=feed.url)= feed.url
     div.control-group
       lable.control-label(for='selector') Selector
       div.controls

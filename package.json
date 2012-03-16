@@ -11,6 +11,8 @@
     "rss": ">= 0.0.3",
     "request": ">= 2.9.x",
     "express": "2.5.8",
+    "express-messages-bootstrap": ">= 0.0.8",
+    "moment": ">= 1.4.0",
     "jade": ">= 0.0.1",
     "connect-redis": ">= 1.2.0"
   },

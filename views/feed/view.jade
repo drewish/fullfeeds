@@ -1,6 +1,9 @@
-div.offset8!= partial('manage_menu', feed)
-div Has #{feed.articles.length} items
-dl
-each article, i in feed.articles
-  dt=article.title
-  dd!=article.content
+div.row
+  div.span8
+    dl
+      each article, i in feed.articles
+        dt=article.title
+        dd!=article.content
+  div.span4
+    != partial('manage_menu', feed)
+

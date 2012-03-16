@@ -1,6 +1,7 @@
-form(method='post', action='/feeds/' + feed.name + '/delete')
+form#form-feed-add(method='post', action='/feeds/' + feed.name + '/delete')
   fieldset
-    legend Are you sure you want to delete <em>#{feed.name}</em>?
+    legend Are you sure you want to delete this feed?
+
     div.form-actions
       input.btn.btn-danger(type='submit', value='Delete')
       &nbsp;

@@ -14,8 +14,9 @@ html(lang="en")
       }
     link(href="/css/bootstrap-responsive.css", rel="stylesheet")
 
-    //if lt IE 9
-      script(src="http://html5shim.googlecode.com/svn/trunk/html5.js")
+    block script_head
+      //if lt IE 9
+        script(src="http://html5shim.googlecode.com/svn/trunk/html5.js")
 
   body
     //-!=partial('navbar')
@@ -24,8 +25,11 @@ html(lang="en")
       div.page-header
         h1= title
 
+      != messages()
       != body
 
-    script(src="/js/jquery-1.7.1.js")
-    script(src="/js/bootstrap.js")
+    block script_footer
+      script(src="/js/jquery-1.7.1.js")
+      script(src="/js/bootstrap.js")
+      script(src="/js/fullfeeds.js")
 
