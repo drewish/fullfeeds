@@ -9,7 +9,7 @@ var config = [
       // Skip ads.
       return (article.link.indexOf("ads.pheedo.com") === -1) ? article.guid : false;
     },
-    selector: '#entrytext',
+    selector: '.entry-content',
   },
   {
     name: 'taibbi',
