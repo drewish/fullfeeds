@@ -4,11 +4,11 @@
   "description": "Enhances RSS feeds by following their links, extracting additional additional content from those pages and incorporating it into a new feed.",
   "author": "andrew morton <drewish@katherinehouse.com> (http://drewish.com/)",
   "dependencies": {
-    "async": ">= 0.1.15",
-    "feedparser": ">= 0.4.5",
-    "jsdom": ">= 0.2.11",
-    "redis": ">= 0.7.1",
-    "rss": ">= 0.0.3"
+    "async": "= 0.1.15",
+    "feedparser": "= 0.4.5",
+    "jsdom": "= 0.2.11",
+    "redis": "= 0.7.1",
+    "rss": "= 0.0.3"
   },
   "main": "./lib/fullfeeds",
   "engines": [
