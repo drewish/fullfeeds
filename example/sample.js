@@ -1,13 +1,19 @@
 var fullfeeds = require('../lib/fullfeeds'),
-    fs = require('fs');
+    fs = require('fs'),
+    request = require('request');
 
 var config = [
   {
     name: 'plumline',
     url: 'http://feeds.washingtonpost.com/rss/rss_plum-line',
-    urlExtractor: function(article) {
-      // Skip ads.
-      return (article.link.indexOf("ads.pheedo.com") === -1) ? article.guid : false;
+    urlExtractor: function(article, callback) {
+      // They put a redirect URL in the first result that we need to follow.
+      var redirectMatcher = /URL=(.*)" \/\>\<\/noscript\>/
+      request(article.guid, function (error, response, body) {
+        if (error) return callback(error);
+        if (response.statusCode != 200) return callback("bad fetch...");
+        callback(null, redirectMatcher.exec(body)[1]);
+      });
     },
     selector: '.entry-content',
   },
