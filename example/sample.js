@@ -8,11 +8,13 @@ var config = [
     url: 'http://feeds.washingtonpost.com/rss/rss_plum-line',
     urlExtractor: function(article, callback) {
       // They put a redirect URL in the first result that we need to follow.
-      var redirectMatcher = /URL=(.*)" \/\>\<\/noscript\>/
+      var redirectMatcher = /"og:url" content="(.+?)"\/>/
       request(article.guid, function (error, response, body) {
         if (error) return callback(error);
         if (response.statusCode != 200) return callback("bad fetch...");
-        callback(null, redirectMatcher.exec(body)[1]);
+        var matches = redirectMatcher.exec(body);
+        if (!matches) return callback("no match...");
+        callback(null, matches[1]);
       });
     },
     selector: '.entry-content',
